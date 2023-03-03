@@ -64,6 +64,15 @@ Do poruszenia robotem UR z poziomu RViza będzie potrzebne:
 1. Instalacja MoveIta
    1. 
 
+WIP
+
+ur_robot_driver [repo](https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver)
 
 ur_robot_driver [docs](https://docs.ros.org/en/ros2_packages/rolling/api/ur_robot_driver/index.html)
 
+moveit 2 [docs](https://moveit.picknik.ai/humble/index.html)
+
+
+
+# Krok X - Wyzerowanie systemu dla kolejnej grupy
+- TODO
