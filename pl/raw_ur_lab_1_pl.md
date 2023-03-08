@@ -8,6 +8,8 @@ sudo apt update && sudo apt install -y \
 	gpg \
 	htop \
 	mc \
+	meshlab \
+	mupdf \
 	neovim \
 	ranger \
 	tmux \
@@ -239,15 +241,15 @@ ros2 pkg create $PACKAGE_NAME --build-type ament_cmake  --dependencies ur_client
 
 Nastepnie tworzymy szkielet folderów paczki.
 ```bash
-mkdir -p $PACKAGE_NAME/etc
+mkdir -p $PACKAGE_NAME/config/ur3
 mkdir -p $PACKAGE_NAME/launch
 echo 'install(DIRECTORY etc launch DESTINATION share/${PROJECT_NAME})' >> $PACKAGE_NAME/CMakeLists.txt
 ```
 
-Do folderu `etc` należy przekopiować wcześniej wyekstraktowaną kalibrację robota:
+Do folderu `config/ur3` należy przekopiować wcześniej wyekstraktowaną kalibrację robota:
 
 ```bash
-cp ~/my_robot_calibration.yaml ~/ros2_ws/src/$PACKAGE_NAME/etc/ur3_calibration.yaml
+cp ~/my_robot_calibration.yaml ~/ros2_ws/src/$PACKAGE_NAME/config/ur3/ur3_calibration.yaml
 ```
 
 Następnie, należy skopiować bazowy plik launch dla robota UR3 CB do nowej paczki:
@@ -260,7 +262,7 @@ Skopiowany plik (tj. `launch/ur3.launch.py`) należy wyedytować. Zostaną do ni
 	```python
 	# ...
 	kinematics_params = PathJoinSubstitution(
-			[FindPackageShare("NAZWA_PACZKI"), "etc", "", "ur3_calibration.yaml"]
+			[FindPackageShare("NAZWA_PACZKI"), "config", ur_type, "ur3_calibration.yaml"]
 		)
 	# ...
 	```
@@ -306,10 +308,98 @@ source ./install/local_setup.bash
 
 
 ## Dodanie modelu chwytu kamery + chwytaka do modelu robota
+Kolejnym krokiem jest rozszerzenie modelu robota o zamontowane narzędzie (tu: chwytak i kamerę). W tym celu należy:
+- zdobyć model CAD elementów (np. w formacie `*.stl`),
+- rozszerzyć definicję modelu robota o dodatkowe połaczenia (i ich parametry fizyczne).
+
+Opis kinematyki robota (zarówno geometrii jak i połączeń pomiędzy jego przegubami) jest typowo definiowany w języku XML w formacie **URDF** (and. *Unified Robotics Description Format*. [dokumentacja](https://docs.ros.org/en/foxy/Tutorials/Intermediate/URDF/URDF-Main.html)). Masowa edycha plików XML dla floty robotów może okazać się dość czasochłonna. Dla potrzeby parametryzacji plików XML w ROSie został opracowany język makr **Xarco** (*XML Macros*). Xarco pozwala na pisanie krótszych (a tym samym czytelniejszych) plików XML. Więcej na temat Xarco można przeczytać w [dokumentacji ROS 2](https://docs.ros.org/en/foxy/Tutorials/Intermediate/URDF/Using-Xacro-to-Clean-Up-a-URDF-File.html).
+
+Bazowy model robota UR3 CB można pobrać ze strony producenta, a następnie samodzielnie przekuć go w plik URDF.Jednakże, wygodniejszą metodą będzie skorzystanie z gotowego opisu w paczce [Universal_Robots_ROS2_Description](https://github.com/UniversalRobots/Universal_Robots_ROS2_Description) (katalog `urdf`).
+
+Wyżej wymieiona definicja kinematyki robota UR3 CB w pcacze *Universal_Robots_ROS2_Description* została zdefiniowana przy pomocy makra Xarco w pliku `urdf/ur_macro.xacro`.
+
+
+1. Dostarczyć plik stl oraz dae.
+
+W paczce utworzyć katalog `meshes` z podkatalogami `collision` i `visual`, przekopiwująć do nich kolejno pliki `.stl` oraz `.dae`. Finalnie, struktura plików ma wyglądać następująco:
+```
+NAZWA_PACZKI
+- etc
+- launch
+- meshes
+	- collision
+		- gripper_camera.stl
+	- visual
+		- gripper_camera.stl
+...
+```
+
+2. Wedytować `urdf/ur_macro.xacro` tak, aby zawrzeć informacje o chwyatku
+	- TODO: rozszerzyć o modyfikację pliku z kalibracją (ddodanie członu parametrów chwytaka)
+3. Wedytować pliki:
+	- `config/ur3/physical_parameters.yaml`
+	- `config/ur3/visual_parameters.yaml`
+
+3. Wyedytować plik `launch/ur3.launch.py` by uwzględnić powyższe modyfikacje, tj:
+	```python
+		# ...
+		physical_params = PathJoinSubstitution(
+			[FindPackageShare("NAZWA_PACZKI"), "config", ur_type, "physical_parameters.yaml"]
+		)
+		visual_params = PathJoinSubstitution(
+        	[FindPackageShare("NAZWA_PACZKI"), "config", ur_type, "visual_parameters.yaml"]
+    	)
+		# ...
+	```
+	```python
+	    # ...
+		robot_description_content = Command(
+        	[
+            	PathJoinSubstitution([FindExecutable(name="xacro")]),
+            	" ",
+            	PathJoinSubstitution([FindPackageShare("NAZWA_PACZKI"), "urdf", description_file]),
+            	" ",
+				# ...
+	```
 
 ## Dodanie płaszczyzn Workspace'a
+Bez zdefiniownia obszaru roboczego robot może poruszać się "bez ograniczeń". O ile kontroler ruchu robota może mieć niskopoziomowo zdefiniowane protokoły bezpieczeństwa, o tyle planer trajektorii w *MoveIt* nie ma takich informacji pobieranych z automatu.
+
+![Szalona trajektoria przechodząca przez blat stanowiska](imgs/wild_trajectory.gif)
 
 ## Dodanie transformacji
+Na podstawie [dokumentacji bibliotetki TF2](https://docs.ros.org/en/rolling/Tutorials/Intermediate/Tf2/Writing-A-Tf2-Static-Broadcaster-Cpp.html#the-proper-way-to-publish-static-transforms).
+
+W pliku `launch/ur3.launch.py` należy dopisać definicję uruchomienia dodatkowych node'ów `static_transform_publisher`, które jednorazowo opublikują statyczną transformację. Do realizacji ćwiczenia potrzebnych jest kilka definicji:
+
+### Chwytak z kamerą
+```python
+tool0_tool1_static_transform = Node(
+        package='tf2_ros',
+        executable='static_transform_publisher',
+        arguments = ['--x', '0', '--y', '0', '--z', '0.075', '--yaw', '0', '--pitch', '0', '--roll', '0', '--frame-id', 'tool0', '--child-frame-id', 'tool1']
+    )
+```
+
+### Kamera głębi całej sceny
+```python
+base_to_depth_camera_static_transform = Node(
+        package='tf2_ros',
+        executable='static_transform_publisher',
+        arguments = ['--x', '0', '--y', '0', '--z', '1.3', '--yaw', '0', '--pitch', '1.5707963', '--roll', '0', '--frame-id', 'base', '--child-frame-id', 'depth_camera']
+    )
+```
+
+Następnie musimy dodać te node'y do uruchomienia:
+```python
+nodes_to_start = [
+		# ...
+		tool0_to_tool1_static_transform,
+        base_to_depth_camera_static_transform,
+    ]
+```
+
+---
 
 ## Uruchomienie
 
@@ -367,9 +457,12 @@ Typ: `ur_msgs/msg/IOStates`
 ros2 topic echo /io_and_status_controller/io_states
 ```
 
-# Sterowanie narzędziem robota
+# Sterowanie chwytakiem Schmalz
 
-Na podstawie [ur_msgs]():
+- Chwytak Schmalz ECBPMi 24V-DC M12-8 - [Dokumetnacja](https://www.schmalz.com/en-it/vacuum-technology-for-robotics/vacuum-generators/vacuum-generators-ecbpmi-312576/10.03.01.00556/)
+- 
+
+Na podstawie [ur_msgs/srv/SetIO.srv](https://github.com/ros-industrial/ur_msgs/blob/melodic-devel/srv/SetIO.srv):
 ```
 # digital tool output
 int8 PIN_TOOL_DOUT0 = 16
@@ -454,6 +547,11 @@ cd ~/ros2_ws
 
 
 ```
+
+# TODO
+- Kalibracja transformacji kamery głebi (Astra)
+- Kalibracja transofrmiacji kamery głębi (RealSense)
+- 
 
 # Krok X - Wyzerowanie systemu dla kolejnej grupy
 - TODO
