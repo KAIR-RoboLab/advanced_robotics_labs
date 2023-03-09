@@ -308,9 +308,13 @@ source ./install/local_setup.bash
 
 
 ## Dodanie modelu chwytu kamery + chwytaka do modelu robota
+Luźno inspirowane [tutorialem Compas Fab](https://gramaziokohler.github.io/compas_fab/0.21.0/examples/03_backends_ros/07_ros_create_urdf_ur5_with_measurement_tool.html#3-7-3-create-xacros-and-generate-urdf).
+
 Kolejnym krokiem jest rozszerzenie modelu robota o zamontowane narzędzie (tu: chwytak i kamerę). W tym celu należy:
 - zdobyć model CAD elementów (np. w formacie `*.stl`),
 - rozszerzyć definicję modelu robota o dodatkowe połaczenia (i ich parametry fizyczne).
+
+Niektóre parametry (np. macierz momentów bezwładności) mogą zostać założone (przy pewnych założenich, m.in. jednorodnego materiału) przy pomocy programu *MeshLab* - więcej informacji znajduje się w [dokumentacji Gazebo](https://classic.gazebosim.org/tutorials?tut=inertia#Computingtheinertialparameters).
 
 Opis kinematyki robota (zarówno geometrii jak i połączeń pomiędzy jego przegubami) jest typowo definiowany w języku XML w formacie **URDF** (and. *Unified Robotics Description Format*. [dokumentacja](https://docs.ros.org/en/foxy/Tutorials/Intermediate/URDF/URDF-Main.html)). Masowa edycha plików XML dla floty robotów może okazać się dość czasochłonna. Dla potrzeby parametryzacji plików XML w ROSie został opracowany język makr **Xarco** (*XML Macros*). Xarco pozwala na pisanie krótszych (a tym samym czytelniejszych) plików XML. Więcej na temat Xarco można przeczytać w [dokumentacji ROS 2](https://docs.ros.org/en/foxy/Tutorials/Intermediate/URDF/Using-Xacro-to-Clean-Up-a-URDF-File.html).
 
@@ -334,9 +338,9 @@ NAZWA_PACZKI
 ...
 ```
 
-2. Wedytować `urdf/ur_macro.xacro` tak, aby zawrzeć informacje o chwyatku
+1. Wedytować `urdf/ur_macro.xacro` tak, aby zawrzeć informacje o chwyatku
 	- TODO: rozszerzyć o modyfikację pliku z kalibracją (ddodanie członu parametrów chwytaka)
-3. Wedytować pliki:
+2. Wedytować pliki:
 	- `config/ur3/physical_parameters.yaml`
 	- `config/ur3/visual_parameters.yaml`
 
@@ -393,9 +397,9 @@ base_to_depth_camera_static_transform = Node(
 Następnie musimy dodać te node'y do uruchomienia:
 ```python
 nodes_to_start = [
-		# ...
-		tool0_to_tool1_static_transform,
-        base_to_depth_camera_static_transform,
+	# ...
+	tool0_to_tool1_static_transform,
+    base_to_depth_camera_static_transform,
     ]
 ```
 
