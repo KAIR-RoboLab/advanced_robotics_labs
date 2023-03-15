@@ -1,4 +1,29 @@
+# Stanowisko z Robotem Universal Robots (UR3 CB)
+W ramach serii 3 zajęć laboratoryjnych przewidzianio:
+- niniejszą instrukcję, pomagającą w konfiguracji całego stanowiska (~1 zajęcia)
+- mini-projekt łączący wizję (kamery RGB/głębi) z rozwiązaniem problemu _Pick & Place_ (dosł. podniesienia i położenia).
+
+---
+## Informacje dla prowadzącego
+**Instrukcja ma nacisk na praktykę** pracy z robotem. Przed rozpoczęciem zajęć **należy** zapoznać grupę z niniejszymi koncepcjami:
+- Roboty przemysłowe vs koboty - różnice,
+- Bezpieczeństwo wokół robota (Safety) - duże czerwone przyciski,
+
+**W trakcie budowy paczki MoveIt (około 20 min)**, należy wprowadzić grupę labolatoryjną do obsługi roboty, w szczególnośći:
+- Przeprowadzić demonstrację uruchomienia robota,
+- "Przeklilkanie" interfejsu (program robota, konfiguracja instalacji, poruszanie robotem, wysterowanie IO, logi),
+
+Dodatkowo, **można** poruszyć następujące kwestie:
+- Zdalne sterowanie przegubami robota (protokół spełnaijący wymogi czasu rzeczywistego (RTDE)),
+- Zdalne zarządzanie stanem robota (uruchomienie i wybór programu) (Dashboard),
+- Regulatory (wspomnieć o ROS 2 Control),
+- Planery trajektorii.
+
+---
 # Krok 0 - Wstępna konfiguracja linuxa
+**UWAGA:** Podchodząc do stanowiska, prawdopodobnie krok ten został już wykonany podczas jego pierwszego uruchomienia. **Proszę skontaktować się z prowadzącym, czy krok ten jest niezbędny.**
+
+
 - Pobierz i zainstaluj swoje ulubione narzędzia, np:
 ```bash
 sudo apt update && sudo apt install -y \
@@ -15,6 +40,7 @@ sudo apt update && sudo apt install -y \
 	tmux \
 	wget
 ```
+
 - Visual Studio Code [docs](https://code.visualstudio.com/docs/setup/linux)
 ```bash
 sudo apt install -y wget gpg apt-transport-https
@@ -26,35 +52,38 @@ sudo apt update
 sudo apt install code
 ```
 
+---
+## Instalacja ROS 2 Humble
 - Zainstaluj ROS 2 Humble [docs](https://docs.ros.org/en/humble/Installation/Ubuntu-Install-Debians.html)
 
-    1. Upewnij się, że lokalizacja systemu jest prawidłowo ustawiona:
-    ```bash
-	locale  # check for UTF-8
+1. Upewnij się, że lokalizacja systemu jest prawidłowo ustawiona:
+  ```bash
+locale  # check for UTF-8
 
-	sudo apt update && sudo apt install locales
-	sudo locale-gen en_US en_US.UTF-8
-	sudo update-locale LC_ALL=en_US.UTF-8 LANG=en_US.UTF-8
-	export LANG=en_US.UTF-8
+sudo apt update && sudo apt install locales
+sudo locale-gen en_US en_US.UTF-8
+sudo update-locale LC_ALL=en_US.UTF-8 LANG=en_US.UTF-8
+export LANG=en_US.UTF-8
 
-	locale  # verify settings
-	``` 
-	2. Dodaj repozytorium PPA do systemu:
-    ```bash
-	sudo apt install -y software-properties-common curl
-	sudo add-apt-repository universe
-	sudo curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.key -o /usr/share/keyrings/ros-archive-keyring.gpg
-	echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/ros-archive-keyring.gpg] http://packages.ros.org/ros2/ubuntu $(. /etc/os-release && echo $UBUNTU_CODENAME) main" | sudo tee /etc/apt/sources.list.d/ros2.list > /dev/null
-	```
-	3. Zainstaluj paczki ROS 2:
-    ```bash
-	sudo apt update
-	sudo apt install -y ros-humble-desktop
-	```
+locale  # verify settings
+``` 
+2. Dodaj repozytorium PPA do systemu:
+  ```bash
+sudo apt install -y software-properties-common curl
+sudo add-apt-repository universe
+sudo curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.key -o /usr/share/keyrings/ros-archive-keyring.gpg
+echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/ros-archive-keyring.gpg] http://packages.ros.org/ros2/ubuntu $(. /etc/os-release && echo $UBUNTU_CODENAME) main" | sudo tee /etc/apt/sources.list.d/ros2.list > /dev/null
+```
+3. Zainstaluj paczki ROS 2:
+```bash
+sudo apt update
+sudo apt install -y ros-humble-desktop
+```
 
-	4. Pamiętaj, aby za każdym razem w terminalu użyć komendy `source` z odpowiednim workspace'em, np. `source /opt/ros/humble/setup.bash` 
+4. Pamiętaj, aby za każdym razem w terminalu użyć komendy `source` z odpowiednim workspace'em, np. `source /opt/ros/humble/setup.bash` 
 
 
+---
 ## Instalacja narzędzi do budowy projektów
 
 Proces instalacji narzędzi należy zacząc od `rosdep` - służy do automatycznego instalowania brakujących zalezności sklonowanych repozytoriów (paczek ROS)
@@ -78,7 +107,8 @@ Kolejnym narzędziem jest `vcstool`, służącym do automatycznego klonowania re
 sudo apt install -y python3-vcstool
 ```
 
-## Instalacja MoveIt
+---
+# Krok 1 - Instalacja MoveIt
 Zważająć na fakt, że ROS 2 wciąż jest prężnie rozwijany, nie wszystkie paczki i moduły mogą działać od razu po ich instalacji z oficjalnego repozytorium PPA. Z tego powodu, na potrzeby ćwiczenia labolatoryjnego, nalezy pobrać i samodzielnie zbudować paczki odpowiedzialne za moduł MoveIt.
 
 1. Procedurę zaczynamy od pobrania paczki `moveit2_tutorials`:
@@ -88,21 +118,25 @@ mkdir -p ~/ros2_ws/src
 cd ~/ros2_ws/src
 git clone https://github.com/ros-planning/moveit2_tutorials --branch humble --depth 1
 ```
+
 2. Nastepnie kolonujemy brakujące paczki przy pomocy narzędzia `vcstool`:
 ```bash
 vcs import < moveit2_tutorials/moveit2_tutorials.repos
 ```
+
 3. Zainstalować brakuje zależności (wszystkich paczek) przy pomocy `rosdep`:
 ```bash
 sudo apt update && rosdep install -r --from-paths . --ignore-src --rosdistro $ROS_DISTRO -y
 ```
+
 4. Kolejnym krokiem jest budowa paczek *MoveIt* i wczytania ich do aktualnego obszaru roboczego:
 ```bash
 cd ~/ros2_ws
 colcon build --mixin release
 ```
 - **Uwaga** budowanie może trwać ponad **20 min**. Proszę wykorzystać ten czas na zapoznanie się z informacjami, które w danym momencie podaje narzędzie `colcon`. W osobnym terminalu można uruchomić program `htop` i zaobserwować użycie pamięći RAM oraz rdzeni procesora podczas kompilacji.
-5. Po zakończeni budowy, nalezy paczki wczytać do aktualnego kontekstu roboczego:
+
+5. Po zakończeniu budowy, nalezy paczki wczytać do aktualnego kontekstu roboczego:
 ```bash
 source /opt/ros/humble/setup.bash
 source install/local_setup.bash
@@ -122,32 +156,10 @@ ros2 launch moveit2_tutorials demo.launch.py rviz_tutorial:=true
 - informacje o sterowaniu (w języku angielskim) znajdują się [w oficjalnej dokumentacji MoveIt 2](https://moveit.picknik.ai/humble/doc/tutorials/quickstart_in_rviz/quickstart_in_rviz_tutorial.html)
 
 ---
-# (OPCJONALNE TODO) Zmiana implementacji DDS
-Zgodnie z informacją na tutorialu MoveIt 2, 26 wrzesnia 2022 wystepował problem z domyślną implementacją DDS w ROS 2 middleware. W celu jej obejścia, należało doinstalować CycloneDDS:
-```bash
-sudo apt install ros-humble-rmw-cyclonedds-cpp
-```
-i w każdym środowisku ustawiać zmienną środowiskoą (lub dodać ją do `~/.bashrc`):
-```bash
-export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
-```
-
-
----
-# Tematy i koncepcje do wytłyumaczenia
-- Sterowanie przegubami RealTime (RTDE) oraz odpalanie programu (Dashboard)
-- Kontrolery (ROS 2 Control)
-- Planery trajektorii
-- Roboty przemysłowe a koboty - różnice
-- Obwody safety - GRZYBY MUSZA BYĆ SPRAWNE
-- Inicjalizację robota - STOP, E-STOP, Booting, Running, itd.
----
-
-# Krok 1 - Przygotowanie robota do zdalnego sterowania
-**Poniższe kroki zakładają, że zarówno komputer i robot zostały już uruchomione**.
-
 
 # Krok 2 Instalacja UR Robot Driver
+**UWAGA: Poniższe polecania zakładają, że zarówno komputer i robot zostały już uruchomione**.
+
 Podobnie jak podczas instalacji MoveIt, należy sklonować repozytorium, pobrać brakujące zależności i zbudować paczkę sterownika robota UR.
 ```bash
 git clone --branch humble https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver.git
@@ -159,7 +171,8 @@ colcon build --cmake-args -DCMAKE_BUILD_TYPE=Release
 source install/local_setup.bash
 ```
 
-## 1. Konfiguracja sieci
+---
+## Konfiguracja sieci
 Na stanowisku nr 1, komputer PC i robot UR powinny mieć następujące adresy IP:
 - **PC**: `192.168.0.15`
 - **UR3 CB**: `192.168.0.10`
@@ -181,10 +194,44 @@ cat /etc/hosts
 ...
 ```
 
+---
+## Instalacja URCap
+W celu wykorzystania możliwości robota UR3 CB do zdalnego sterowania, należy wgrać do jego systemu rozszerzenie (tzw. *URCap*) o nazwie "*externalcontrol-1.0.5.urcap*".
 
-**TODO**: Teraz konfiguracja Robota, sieci, pobranie kinematyki itd.
+Na potrzeby labolatorium **krok ten został już wykonany**. Szczegołowa instrukcja jak powtórzyć tą operację znajduje się w [oficjalnej dokumentacji ur_robot_driver](https://docs.ros.org/en/ros2_packages/rolling/api/ur_robot_driver/installation/install_urcap_cb3.html).
 
-## 2. Kalibracja kinematyki robota
+---
+## Konfiguracja programu robota
+Program na robocie składa się zarówno z kolejnych poleceń (kolokwialnie: "kodu") oraz konfiguracji stanowiska, w którego skład wchodzą między innymi: definicje płaszczyzn ograniczających przestrzeń roboczą i konfiguracja zewnętrznych peryferii (np. chwytaka).
+
+Konfiguracja programu "od zera" jest czasochłonną operacją, którą należy wykonać na początku instalacji robota na danym stanowisku. Najczęściej wykonują to osoby techniczne, odpowiedzialne m.in. za postument dla robota, klatkę bezpieczeńśtwa i ułożenie połączeń elektrycznych.
+
+Techniczne mówiąć, część "kodu" po stronie robota sprowadza się do wywołania polecenia "*External Control*".W celu jego wywołania, Proszę spróbować przejść przez poniższą "ścieżkę A)":
+
+### A) Kolejne uruchomienie robota
+- Sprawdzić czy suma kontrolna (hash) konfiguracji bezpieczeństwa w **prawym górnym rogu** teach petanda jest równa: `7EE6`.
+  - W przypadku rozbieżnośći, należy wykonać kroki w sekcji poniżej (tj. "B) Pierwsze uruchomienie robota w laboratorium")
+- Utworzyć nowy program (`Program Robot->Empty Program`)
+- Po **lewej** stronie okna wybrać *Robot Program*
+- Z zakładki `Strcutre` wybrać zakładkę `URCaps`
+- Dodać komendę `External Control`
+
+### B) Pierwsze uruchomienie robota w laboratorium
+Niniejsze kroki mają zapewnić **poprawną konfigurację płaszczyzn bezpieczeństwa (safety) robota**.
+
+Mająć powyższe na uwadze, **dla potrzeb laboratorium zostanie wykorzystany wcześniej skonfigurowany program po stronie robota**:
+- W głównym ekranie PolyScope wybrać **Program Robot**,
+- Następnie **Load Program**,
+- Wybrać plik *robolab_c3_13.urp*,
+- Sprawdzić czy suma kontrolna (hash) konfiguracji bezpieczeństwa w **prawym górnym rogu** teach petanda jest równa: `7EE6`.
+  - W przypadku rozbieżnośći, należy skonsultować się z prowadzącym.
+
+
+Po wykonaniu powyższych kroków, robot jest gotowy do zdalnego sterowania z poziomu komputera .
+
+# Krok 3 - Uruchomienie MoveIt 2 + UR Robot Driver
+
+### Kalibracja kinematyki robota
 Na końcu linii produkcyjnej, każdy robot jest indywidualnie kalibrowany. Parametry kalibracji są niezbędne do przeprowadzania precyzyjnych obliczeń kinematyki prostej i odwrotnej. Plik ten jest zaszyty w kontrolerze robota. W celu obliczania prawidłowych nastaw przegubów z poziomu komputera, należy ten plik wyekstraktować. 
 
 Aby nie zagłebiać się w dokumentację robota (i ręcznie implemnetować zapytania API do uzyskania tych danych), można wykorzystać gotowy skrypt paczki `ur_robot_driver`:
@@ -195,29 +242,7 @@ gdzie, argumenty:
 - `robot_ip` - (string) jest adresem IP (lub aliasem) robota,
 - `target_filename` - (string) jest ścieżką, pod którą ma zostać zapisany plik YAML z kalibracją robota.
 
-
-## 3. Instalacja URCap
-W celu wykorzystania możliwości robota UR3 CB do zdalnego sterowania, należy wgrać do jego systemu rozszerzenie (tzw. *URCap*) o nazwie "*externalcontrol-1.0.5.urcap*".
-
-Na potrzeby labolatorium **krok ten został już wykonany**. Szczegołowa instrukcja jak powtórzyć tą operację znajduje się w [oficjalnej dokumentacji ur_robot_driver](https://docs.ros.org/en/ros2_packages/rolling/api/ur_robot_driver/installation/install_urcap_cb3.html).
-
-## 4. Konfiguracja programu robota
-Program na robocie składa się zarówno z kolejnych poleceń (kolokwialnie: "kodu") oraz konfiguracji stanowiska, w którego skład wchodzą między innymi: definicje płaszczyzn ograniczających przestrzeń roboczą i konfiguracja zewnętrznych peryferii (np. chwytaka).
-
-Konfiguracja programu "od zera" jest czasochłonną operacją, którą należy wykonać na początku instalacji robota na danym stanowisku. Najczęściej wykonują to osoby techniczne, odpowiedzialne m.in. za postument dla robota, klatkę bezpieczeńśtwa i ułożenie połączeń elektrycznych.
-
-Mająć powyższe na uwadze, **dla potrzeb laboratorium zostanie wykorzystany wcześniej skonfigurowany program po stronie robota**:
-- W głównym ekranie PolyScope wybrać **Program Robot**,
-- Następnie **Load Program**,
-- Wybrać plik *robolab_c3_13.urp*,
-- Sprawdzić czy suma kontrolna (hash) konfiguracji bezpieczeństwa w **prawym górnym rogu** teach petanda jest równa: `7EE6`.
-  - W przypadku rozbieżnośći, należy skonsultować się z prowadzącym.
-
-Część "kodu" po stronie robota sprowadza się do wywołania polecenia "*External Control*".
-
 ---
-# Krok 3 - Uruchomienie UR Robot Driver & MoveIt 2
-
 
 ## Pliki launch
 Poniższa sekcja powstała na podstawie [dokumententacji ur_robot_driver](https://docs.ros.org/en/ros2_packages/rolling/api/ur_robot_driver/usage.html). Poniższe kroki zakładają tylko i wyłącznie użycie *prawdziwego* robota, jednakże trzeba zaznaczyć, że istnieje możliwość uruchomienia robota w symulacji.
@@ -306,6 +331,9 @@ colcon build --packages-select $PACKAGE_NAME
 source ./install/local_setup.bash
 ```
 
+---
+# Krok 4 - Dodatkowe peryferia
+**Ta sekcja NIE jest wymagana do rozpoczęcia ruszania robotem**.
 
 ## Dodanie modelu chwytu kamery + chwytaka do modelu robota
 Luźno inspirowane [tutorialem Compas Fab](https://gramaziokohler.github.io/compas_fab/0.21.0/examples/03_backends_ros/07_ros_create_urdf_ur5_with_measurement_tool.html#3-7-3-create-xacros-and-generate-urdf).
@@ -323,7 +351,7 @@ Bazowy model robota UR3 CB można pobrać ze strony producenta, a następnie sam
 Wyżej wymieiona definicja kinematyki robota UR3 CB w pcacze *Universal_Robots_ROS2_Description* została zdefiniowana przy pomocy makra Xarco w pliku `urdf/ur_macro.xacro`.
 
 
-1. Dostarczyć plik stl oraz dae.
+1. Dostarczyć plik `stl` oraz `dae`.
 
 W paczce utworzyć katalog `meshes` z podkatalogami `collision` i `visual`, przekopiwująć do nich kolejno pliki `.stl` oraz `.dae`. Finalnie, struktura plików ma wyglądać następująco:
 ```
@@ -364,7 +392,7 @@ NAZWA_PACZKI
             	PathJoinSubstitution([FindPackageShare("NAZWA_PACZKI"), "urdf", description_file]),
             	" ",
 				# ...
-	```
+	``
 
 ## Dodanie płaszczyzn Workspace'a
 Bez zdefiniownia obszaru roboczego robot może poruszać się "bez ograniczeń". O ile kontroler ruchu robota może mieć niskopoziomowo zdefiniowane protokoły bezpieczeństwa, o tyle planer trajektorii w *MoveIt* nie ma takich informacji pobieranych z automatu.
@@ -405,24 +433,23 @@ nodes_to_start = [
 
 ---
 
-## Uruchomienie
+# Krok 5 - Uruchomienie
 
 
-### Plik launch domyślny (NIEZALECANE)
+## Plik launch domyślny (NIEZALECANE)
 W jednym terminalu, należy uruchomić driver:
 ```bash
 ros2 launch ur_robot_driver ur_control.launch.py ur_type:=ur3 robot_ip:=ur-robot launch_rviz:=false
 ```
 
-### Plik launch z kalibracją robota (ZALACANE)
+## Plik launch z kalibracją robota (ZALACANE)
  
 W jednym terminalu, należy uruchomić driver:
 ```bash
 ros2 launch $PACKAGE_NAME ur3.launch.py
 ```
 
-
-### Dalsze uruchamianie
+## Dalsze uruchamianie
 Na teach petandzie, należy kliknąć przycisk **Play**, aby uruchomić program. Można osiągnąć ten sam efekt, wołająć serwis *dasboard*:
 
 ```bash
@@ -433,35 +460,15 @@ W drugim terminalu, należy uruchomić MoveIt:
 ```bash
 ros2 launch ur_moveit_config ur_moveit.launch.py ur_type:=ur3 launch_rviz:=true
 ```
-
 ---
-# Krok 1 - Instalacja MoveIt & UR Driver
-Do poruszenia robotem UR z poziomu RViza będzie potrzebne:
-- Paczka MoveIt z planerami ruchu i pluginem wizualizacyjnym do RViza
-- Kontroler robota zgodny z ros_control - ros2_ur_driver
-- Plugin do systemu operacyjnego robota (URcap) - external control.
-
-1. Konfiguracja robota została już wykonana - urcap jest zainstalowany
-1. Instalacja MoveIta
-   1. 
-
-
-WIP
-
-ur_robot_driver [repo](https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver)
-
-ur_robot_driver [docs](https://docs.ros.org/en/ros2_packages/rolling/api/ur_robot_driver/index.html)
-
-moveit 2 [docs](https://moveit.picknik.ai/humble/index.html)
-
-
-# Odczyt IO z robota
+# Krok 6 - Sterowanie chwytakiem i IO 
+## Odczyt IO z robota
 Typ: `ur_msgs/msg/IOStates`
 ```bash
 ros2 topic echo /io_and_status_controller/io_states
 ```
 
-# Sterowanie chwytakiem Schmalz
+## Sterowanie chwytakiem Schmalz
 
 - Chwytak Schmalz ECBPMi 24V-DC M12-8 - [Dokumetnacja](https://www.schmalz.com/en-it/vacuum-technology-for-robotics/vacuum-generators/vacuum-generators-ecbpmi-312576/10.03.01.00556/)
 - 
@@ -506,59 +513,15 @@ ros2 service call /io_and_status_controller/set_io ur_msgs/srv/SetIO "{fun: 1, p
 ```
 
 
+---
+# Bibliografia
 
-# Instalacja Intel RealSense D405
-Kamerka głebi.
-Oficjalne [repozytorium](https://github.com/IntelRealSense/realsense-ros#installation-instructions)
-```bash
-sudo apt install -y ros-humble-realsense2-camera
-```
-```bash
-ros2 launch realsense2_camera rs_launch.py depth_module.profile:=1280x720x30 pointcloud.enable:=true
-```
+- ur_robot_driver [repo](https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver)
+- ur_robot_driver [docs](https://docs.ros.org/en/ros2_packages/rolling/api/ur_robot_driver/index.html)
+- moveit 2 [docs](https://moveit.picknik.ai/humble/index.html)
 
-# Instalacja kamery Orbbec Astra
-Kamerka głebi na USB 2.0.
-Oficjalne [repozytorium](https://github.com/orbbec/ros_astra_camera/).
-```bash
-sudo docker pull husarion/astra:humble
-```
-```bash
-sudo docker run --rm -it \
-	--device /dev/bus/usb/ \
-	husarion/astra:humble \
-	ros2 launch astra_camera astra_mini.launch.py
-```
-
-## Poniższe REVERTnąć
-```bash
-source /opt/ros/humble/setup.bash
-sudo apt install libgflags-dev  ros-$ROS_DISTRO-image-geometry ros-$ROS_DISTRO-camera-info-manager \
-ros-$ROS_DISTRO-image-transport ros-$ROS_DISTRO-image-publisher libgoogle-glog-dev libusb-1.0-0-dev libeigen3-dev
-cd ~/repos
-git clone https://github.com/libuvc/libuvc.git
-cd libuvc
-mkdir build && cd build
-cmake .. && make -j4
-sudo make install
-sudo ldconfig
-```
-
-```bash
-cd ~/ros2_ws/src
-git clone https://github.com/orbbec/ros_astra_camera.git
-cd ~/ros2_ws
-
-
-```
-
-# TODO
+---
+# TODO 
 - Kalibracja transformacji kamery głebi (Astra)
 - Kalibracja transofrmiacji kamery głębi (RealSense)
-- 
-
-# Krok X - Wyzerowanie systemu dla kolejnej grupy
-- TODO
-```bash
-sudo apt remove -y ros-humble-desktop
-```
+- Opracowanie skryptu do czyszczenia stanowisk między grupami
