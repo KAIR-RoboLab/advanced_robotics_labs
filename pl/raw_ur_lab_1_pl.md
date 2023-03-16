@@ -231,7 +231,32 @@ Po wykonaniu powyższych kroków, robot jest gotowy do zdalnego sterowania z poz
 
 # Krok 3 - Uruchomienie MoveIt 2 + UR Robot Driver
 
-### Kalibracja kinematyki robota
+## Próbne uruchomienie
+W jednym terminalu, należy uruchomić driver:
+```bash
+ros2 launch ur_robot_driver ur_control.launch.py ur_type:=ur3 robot_ip:=ur-robot launch_rviz:=false
+```
+
+Następnie, należy uruchomić program na robocie. Można to osiągnąć na dwa sposoby:
+- z poziomu _teach pendanta_, należy kliknąć przycisk **Play**, aby uruchomić program. 
+- z poziomu nowego terminala (z `source ~/ros2_ws/install/setup.bash` ) wołająć serwis _dasboarda_:
+
+```bash
+ros2 service call /dashboard_client/play std_srvs/srv/Trigger {}
+```
+
+Ostatnim krokiem jest uruchomienie RViza z MoveItem:
+```bash
+ros2 launch ur_moveit_config ur_moveit.launch.py ur_type:=ur3 launch_rviz:=true
+```
+
+O sterowaniu robotem z poziomu MoveIta w RVizie można poczytać [tutaj](https://moveit.picknik.ai/humble/doc/tutorials/quickstart_in_rviz/quickstart_in_rviz_tutorial.html#step-2-play-with-the-visualized-robots).
+
+To przykładowe uruchomienie nie jest w pełni zgodne ze sztuką. Należy zaadresować parę kwestii.
+
+---
+
+## Kalibracja kinematyki robota
 Na końcu linii produkcyjnej, każdy robot jest indywidualnie kalibrowany. Parametry kalibracji są niezbędne do przeprowadzania precyzyjnych obliczeń kinematyki prostej i odwrotnej. Plik ten jest zaszyty w kontrolerze robota. W celu obliczania prawidłowych nastaw przegubów z poziomu komputera, należy ten plik wyekstraktować. 
 
 Aby nie zagłebiać się w dokumentację robota (i ręcznie implemnetować zapytania API do uzyskania tych danych), można wykorzystać gotowy skrypt paczki `ur_robot_driver`:
@@ -251,7 +276,7 @@ W paczce *ur_robot_driver* znajdują się dwa pliki launch:
 - `ur_control.launch.py` - który uruchamia pełną kontrolę nad robotem (kontroler, monitory stanu, sterownik przegubów, oraz dashboard do zarządzania uruchomionym programem),
 - `ur_dashboard_client.launch.py` - uruchamia tylko dashboarda.
 
-Powyższe pliki mogą przyjąć rózne argumenty uruchomieniowe. Ich wytłumaczenie i spis znajduje się w [dokumentacji ur_robot_driver](https://docs.ros.org/en/ros2_packages/rolling/api/ur_robot_driver/usage.html#launch-files).
+Powyższe pliki mogą przyjąć rózne argumenty uruchomieniowe. Ich spis z opisem znajduje się w [dokumentacji ur_robot_driver](https://docs.ros.org/en/ros2_packages/rolling/api/ur_robot_driver/usage.html#launch-files).
 
 ## Własny plik launch
 Na podstawie [dokumentacji ur_calibration](https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/blob/082dd2a90e0b2ac8b69d69bacf662806a7a572b9/ur_calibration/README.md).
@@ -261,14 +286,14 @@ Aby wykorzystać kalibrację, należy utworzyć własną paczkę z własnym plik
 ```bash
 export PACKAGE_NAME=NAZWA_GRUPY_ur_launch
 cd ~/ros2_ws/src
-ros2 pkg create $PACKAGE_NAME --build-type ament_cmake  --dependencies ur_client_library \ --description "Package containing calibrations and launch files for RoboLab's UR robot."
+ros2 pkg create $PACKAGE_NAME --build-type ament_cmake  --dependencies ur_client_library --description "Package containing calibrations and launch files for RoboLab's UR robot."
 ```
 
 Nastepnie tworzymy szkielet folderów paczki.
 ```bash
 mkdir -p $PACKAGE_NAME/config/ur3
 mkdir -p $PACKAGE_NAME/launch
-echo 'install(DIRECTORY etc launch DESTINATION share/${PROJECT_NAME})' >> $PACKAGE_NAME/CMakeLists.txt
+echo 'install(DIRECTORY config launch DESTINATION share/${PROJECT_NAME})' >> $PACKAGE_NAME/CMakeLists.txt
 ```
 
 Do folderu `config/ur3` należy przekopiować wcześniej wyekstraktowaną kalibrację robota:
@@ -282,7 +307,7 @@ Następnie, należy skopiować bazowy plik launch dla robota UR3 CB do nowej pac
 cp $(ros2 pkg prefix ur_bringup)/share/ur_bringup/launch/ur_control.launch.py ur3.launch.py
 ```
 
-Skopiowany plik (tj. `launch/ur3.launch.py`) należy wyedytować. Zostaną do niego wprowadzone nastepujące zmiany:
+Skopiowany plik (tj. `~/ros2_ws/src/$PACKAGE_NAME/launch/ur3.launch.py`) należy wyedytować. Zostaną do niego wprowadzone nastepujące zmiany:
 - wskazanie plik konfiguracji robota w paczce. **UWAGA! Proszę pamiętać o WŁASNEJ nazwie paczki!**
 	```python
 	# ...
@@ -331,8 +356,31 @@ colcon build --packages-select $PACKAGE_NAME
 source ./install/local_setup.bash
 ```
 
+### Uruchomienie sterownika z własnego pliku launch
+ 
+Tak jak wcześniej, uruchamiamamy dwa terminale. W pierwszym uruchamiamy sterownik UR nowym plikiem launch:
+```bash
+# TERMINAL 1
+ros2 launch $PACKAGE_NAME ur3.launch.py
+```
+
+W drugim uruchamiamy program na robocie oraz MoveIta:
+```bash
+# TERMINAL 2
+ros2 service call /dashboard_client/play std_srvs/srv/Trigger {}
+ros2 launch ur_moveit_config ur_moveit.launch.py ur_type:=ur3 launch_rviz:=true
+```
+
+Prosze poruszać robotem (sprawdzić czy wciąż wszystko działa) i docenić mniejszą ilość argumentów podawanych do uruchomienia sterownika.
+
 # Krok 4 - C++ API
 - [Your First C++ MoveIt Project (MoveIt2 Humble) (eng)](https://moveit.picknik.ai/humble/doc/tutorials/your_first_project/your_first_project.html)
+
+Kolejne kwestie do zaadresowania:
+- Można, ale nie trzeba, tworzyć paczki `hello_moveit` - można rozszerzyć paczkę paczkę z Launchem o odpowiednie modyfikacje `CMakeList.txt` oraz `package.xml`,
+- W pierwszej części tutoriala brakuje jakiegokolwiek wyświetlenia informacji, że program się uruchomił. Propozycja: dodać wywołanie `RCLCPP_INFO(logger, "Witaj swiecie!");`,
+- MoveGroupInterface ma problem z parsowaniem opisu na topicu `/robot_description`. Pewnym pchnięciem do przodu jest rempaowanie topica `--ros-args --remap /robot_description_semantic:=/robot_description`,
+- 
 
 # Krok 5 - Dodanie obiektów kolizji przestrzeni roboczej 
 Bez zdefiniownia obszaru roboczego robot może poruszać się "bez ograniczeń". O ile kontroler ruchu robota może mieć niskopoziomowo zdefiniowane protokoły bezpieczeństwa, o tyle planer trajektorii w *MoveIt* nie ma takich informacji pobieranych z automatu.
@@ -443,30 +491,6 @@ nodes_to_start = [
 # Krok 6 - Uruchomienie
 
 
-## Plik launch domyślny (NIEZALECANE)
-W jednym terminalu, należy uruchomić driver:
-```bash
-ros2 launch ur_robot_driver ur_control.launch.py ur_type:=ur3 robot_ip:=ur-robot launch_rviz:=false
-```
-
-## Plik launch z kalibracją robota (ZALACANE)
- 
-W jednym terminalu, należy uruchomić driver:
-```bash
-ros2 launch $PACKAGE_NAME ur3.launch.py
-```
-
-## Dalsze uruchamianie
-Na teach petandzie, należy kliknąć przycisk **Play**, aby uruchomić program. Można osiągnąć ten sam efekt, wołająć serwis *dasboard*:
-
-```bash
-ros2 service call /dashboard_client/play std_srvs/srv/Trigger {}
-```
-
-W drugim terminalu, należy uruchomić MoveIt:
-```bash
-ros2 launch ur_moveit_config ur_moveit.launch.py ur_type:=ur3 launch_rviz:=true
-```
 ---
 # Krok 7 - Sterowanie chwytakiem i IO 
 ## Odczyt IO z robota
@@ -533,3 +557,4 @@ ros2 service call /io_and_status_controller/set_io ur_msgs/srv/SetIO "{fun: 1, p
 - Kalibracja transofrmiacji kamery głębi (RealSense)
 - Opracowanie skryptu do czyszczenia stanowisk między grupami
 - Rozpisać krótkie wprowadzenie do [koncepcji i architektury](https://moveit.picknik.ai/humble/doc/concepts/concepts.html) MoveIt2
+- Dodać robot state publishera z cartesian pose (aktualnie publikowane jako tf)
