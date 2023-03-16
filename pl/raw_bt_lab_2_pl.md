@@ -67,6 +67,8 @@ SLAM_MODE=localization docker compose -f compose.pc.yaml up
 
 To utruchmi cały stos nawigacyny wraz z lokalizacją na statycznie stworzonej mapie sali labolatoryjnej.
 
+> **Warning**: Lidar robota ma problem z widzeniem nóg stolików, daltego będzie próbował jechać na skróty pod stolikiem stanowiska z robotem UR3. Dlatego też można otworzyć mapę w programie Gimp lub MS Paint i dorysować czwny prostokąt w miejscu istnienie stanowiska. Mimo, że żeczywiste wskazanie lidaru będzie pokazywało, że w tym obszarze przestrzeń jest otwarta, to planer globalny będzie grzecznie omijał ten obszar.
+
 ## Lokalizowanie robota
 
 Jak widać robot nie ma pojęcia początkowo gdzie na sali się znajduje. Wskazania lidaru nie pokrywają się z rzeczywistością.
