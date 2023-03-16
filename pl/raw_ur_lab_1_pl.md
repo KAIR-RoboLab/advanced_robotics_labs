@@ -331,8 +331,20 @@ colcon build --packages-select $PACKAGE_NAME
 source ./install/local_setup.bash
 ```
 
+# Krok 4 - C++ API
+- [Your First C++ MoveIt Project (MoveIt2 Humble) (eng)](https://moveit.picknik.ai/humble/doc/tutorials/your_first_project/your_first_project.html)
+
+# Krok 5 - Dodanie obiektów kolizji przestrzeni roboczej 
+Bez zdefiniownia obszaru roboczego robot może poruszać się "bez ograniczeń". O ile kontroler ruchu robota może mieć niskopoziomowo zdefiniowane protokoły bezpieczeństwa, o tyle planer trajektorii w *MoveIt* nie ma takich informacji pobieranych z automatu.
+
+![Szalona trajektoria przechodząca przez blat stanowiska](imgs/wild_trajectory.gif)
+
+## Dodawanie obiektów kolizji do sceny
+
+- [Planning Around Objects (MoveIt2 Humble) (eng)](https://moveit.picknik.ai/humble/doc/tutorials/planning_around_objects/planning_around_objects.html)
+
 ---
-# Krok 4 - Dodatkowe peryferia
+# Krok 5 - Dodatkowe peryferia
 **Ta sekcja NIE jest wymagana do rozpoczęcia ruszania robotem**.
 
 ## Dodanie modelu chwytu kamery + chwytaka do modelu robota
@@ -351,7 +363,7 @@ Bazowy model robota UR3 CB można pobrać ze strony producenta, a następnie sam
 Wyżej wymieiona definicja kinematyki robota UR3 CB w pcacze *Universal_Robots_ROS2_Description* została zdefiniowana przy pomocy makra Xarco w pliku `urdf/ur_macro.xacro`.
 
 
-1. Dostarczyć plik `stl` oraz `dae`.
+- Dostarczyć plik `stl` oraz `dae`.
 
 W paczce utworzyć katalog `meshes` z podkatalogami `collision` i `visual`, przekopiwująć do nich kolejno pliki `.stl` oraz `.dae`. Finalnie, struktura plików ma wyglądać następująco:
 ```
@@ -394,11 +406,6 @@ NAZWA_PACZKI
 				# ...
 	``
 
-## Dodanie płaszczyzn Workspace'a
-Bez zdefiniownia obszaru roboczego robot może poruszać się "bez ograniczeń". O ile kontroler ruchu robota może mieć niskopoziomowo zdefiniowane protokoły bezpieczeństwa, o tyle planer trajektorii w *MoveIt* nie ma takich informacji pobieranych z automatu.
-
-![Szalona trajektoria przechodząca przez blat stanowiska](imgs/wild_trajectory.gif)
-
 ## Dodanie transformacji
 Na podstawie [dokumentacji bibliotetki TF2](https://docs.ros.org/en/rolling/Tutorials/Intermediate/Tf2/Writing-A-Tf2-Static-Broadcaster-Cpp.html#the-proper-way-to-publish-static-transforms).
 
@@ -433,7 +440,7 @@ nodes_to_start = [
 
 ---
 
-# Krok 5 - Uruchomienie
+# Krok 6 - Uruchomienie
 
 
 ## Plik launch domyślny (NIEZALECANE)
@@ -461,7 +468,7 @@ W drugim terminalu, należy uruchomić MoveIt:
 ros2 launch ur_moveit_config ur_moveit.launch.py ur_type:=ur3 launch_rviz:=true
 ```
 ---
-# Krok 6 - Sterowanie chwytakiem i IO 
+# Krok 7 - Sterowanie chwytakiem i IO 
 ## Odczyt IO z robota
 Typ: `ur_msgs/msg/IOStates`
 ```bash
@@ -525,3 +532,4 @@ ros2 service call /io_and_status_controller/set_io ur_msgs/srv/SetIO "{fun: 1, p
 - Kalibracja transformacji kamery głebi (Astra)
 - Kalibracja transofrmiacji kamery głębi (RealSense)
 - Opracowanie skryptu do czyszczenia stanowisk między grupami
+- Rozpisać krótkie wprowadzenie do [koncepcji i architektury](https://moveit.picknik.ai/humble/doc/concepts/concepts.html) MoveIt2
