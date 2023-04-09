@@ -68,20 +68,19 @@ Chwilowo symulacja jest poprawiana. W najbliższym czasie pojawi się możliwoś
 
 ## Zad 2
 
-Stworzyć swoją paczkę ROSową, dodać jej do zależności `behaviortree_cpp_v3` i napisać node który za pomocą loggera ROSowego wyświetla informację i wchodzi w interakcję z użytkownikiem. Należy przetestować node'y typu:
-- `sequence`
-- `fallback`
-- `parallel`
+Do folderu `src` sklonuj repozytorium [BehaviorTree.CPP](https://github.com/BehaviorTree/BehaviorTree.CPP) z najnowszym stabilnym tagiem (w dniu pisania instrukcji jest to tag 4.1.1). Następnie stwórz nową paczkę ROSową. W tej paczce w pliku`package.xml` dodaj jako dependency **behaviortree_cpp**. Tworzymy nowy node C++ i dodajemy w pliku `CMakeLists.txt` jako zależność do budowania `behaviortree_cpp`.
 
-Oraz pracować z wizualizację całości w programie Groot.
+Następnie postępując zgodnie z instrukcjami na stronie [BehaviorTree tutorial](https://www.behaviortree.dev/docs/category/learn-the-basic-concepts) (Wystarczy przeczytać od początku do [02 Blackboard and ports](https://www.behaviortree.dev/docs/tutorial-basics/tutorial_02_basic_ports)) należy stworzyć proste drzewo wyświetlające tekst na standardowym wyjściu terminala. Proszę dać chociaż jeden liść czekający na wejście od użytkownika i na jego bazie przynajmniej zwracać statusy `SUCCESS` i `FAILURE`. Czekanie na wejście może się dziać w sposób blokujący (blokujące akcje w drzewach bechawioralnych nie są wskazane). Mile widziane wykorzystanie portów, ale nie jest ono konieczne.
 
-Przydatne materiały:
-- [BehaviorTree tutorial](https://www.behaviortree.dev/docs/category/learn-the-basic-concepts)
-- [BehaviorTree.CPP/examples](https://github.com/BehaviorTree/BehaviorTree.CPP/tree/master/examples)
+Mając kilka liści napisanych w C++ proszę za pomocą programu [Groot 2](https://www.behaviortree.dev/groot) skomponować drzewo.
+
+> **Info** Warto w kodzie dodać `BT::StdCoutLogger logger_cout(my_tree);`, pozwoli to na podgląd stanu drzwea w czasie rzeczywistym.
 
 ## Zad 3
-Zaprogramować robota żeby działał jak robot usługowy, typu kelner. Jego zadaniem jest przejechać z punktu **A** do punktu **B**, dokonać interakcję i przejechać dalej. W celu interakcji można wykorzystać przyciki znajdujące się z tyłu robota.
 
-Przydatne materiały:
-- [nav2_behavior_tree](https://github.com/ros-planning/navigation2/blob/main/nav2_behavior_tree/README.md)
+Na bazie dostarczonej w tym repozytorum paczki ROSowej należy Stworzyć drzewo nawigujące robotem do celu.
+Napisane są już liście pozwalające na:
+- `nav_to_goal_node::NavToGoalNode`: Nawiguje robota do celu wskazanego przez blackboard.
+- `btn_state_node::BTNStateNode`: Sprawdza stan przyciusku na topicu wskazanym przez parametr z blackboardu `topic_name`.
 
+Należy skomponować dowolne zachowanie robota z wykorzystaniem drzewa bechawioralnego.
