@@ -409,7 +409,7 @@ W pliku `~/ros2_ws/src/Universal_Robots_ROS2_Driver/ur_moveit_config/launch/ur_m
 ```
 
 ## Tutorial
-Prosze wykonać poniższy tutorial. Pod linkiem znajdują się pewne kwestie do samodzielnego zastanaowienia się. **Każdy punkt ruchu musi zostać zlokalizowany pod stanowisko**.
+Prosze wykonać poniższy tutorial. Pod linkiem znajdują się pewne kwestie do samodzielnego zastanowienia się. **Każdy punkt ruchu musi zostać zlokalizowany pod stanowisko**.
 
 > **Uwaga**: Uruchomienie samodzielnie zbudowanego programu ma sens tylko i wyłącznie w momencie, **gdy w tle zostały już uruchomione:** UR Driver oraz MoveIt (*patrz koniec kroku 3*).
 
@@ -418,13 +418,15 @@ Prosze wykonać poniższy tutorial. Pod linkiem znajdują się pewne kwestie do 
 > **UWAGA** KAŻDY RUCH ROBOTEM DO NOWEJ, NIE SPRAWDZONEJ POZYCJI POWINIEN BYĆ WYKONANY POD NADZOREM OPERATORA, GOTOWEGO DO WCIŚNIĘCIA E-STOP!!!
 
 Kwestie do zaadresowania:
-- Można, ale nie trzeba, tworzyć paczki `hello_moveit` - można rozszerzyć paczkę paczkę z Launchem o odpowiednie modyfikacje `CMakeList.txt` oraz `package.xml`,
+- Można, ale nie trzeba, tworzyć paczki `hello_moveit` - można rozszerzyć paczkę z Launchem o odpowiednie modyfikacje `CMakeList.txt` oraz `package.xml`,
 - W pierwszej części tutoriala brakuje jakiegokolwiek wyświetlenia informacji, że program się uruchomił. Propozycja: dodać wywołanie `RCLCPP_INFO(logger, "Witaj swiecie!");`,
+- Grupę ruchu *MoveGroupInterfece* `panda_arm` należy zamienić na `ur_manipulator`,
 - **Odczytanie aktualnej pozycji robota** wymaga samodzielnego przeliczenia jego aktualnej pozycji na podstawie publikowanych transformacji (biblioteka TF2).
   - Można tymczasowo obejść ten problem, poprzez obserwowanie topicu RViza z interaktywnym markerem:
 	```bash
 	ros2 topic echo /rviz_moveit_motion_planning_display/robot_interaction_interactive_marker_topic/update
 	```
+- **Problem z planowaniem trajektorii** 
 
 Przykładowy, sprawdzony punkt przestrzeni:
 ```cpp
