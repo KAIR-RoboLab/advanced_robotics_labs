@@ -68,7 +68,14 @@ Chwilowo symulacja jest poprawiana. W najbliższym czasie pojawi się możliwoś
 
 ## Zad 2
 
-Do folderu `src` sklonuj repozytorium [BehaviorTree.CPP](https://github.com/BehaviorTree/BehaviorTree.CPP) z najnowszym stabilnym tagiem (w dniu pisania instrukcji jest to tag 4.1.1). Następnie stwórz nową paczkę ROSową. W tej paczce w pliku`package.xml` dodaj jako dependency **behaviortree_cpp**. Tworzymy nowy node C++ i dodajemy w pliku `CMakeLists.txt` jako zależność do budowania `behaviortree_cpp`.
+Do folderu `src` sklonuj repozytorium [BehaviorTree.CPP](https://github.com/BehaviorTree/BehaviorTree.CPP) z najnowszym stabilnym tagiem (w dniu pisania instrukcji jest to tag 4.1.1). Następnie stwórz nową paczkę ROSową. W tej paczce w pliku `package.xml` dodaj jako dependency **behaviortree_cpp**. Tworzymy nowy node C++ i dodajemy w pliku `CMakeLists.txt` jako zależność do budowania `behaviortree_cpp`.
+
+Następnie przejdź do głównego foldery workspace'u ROSowego i wykonaj komendy:
+``` bash
+rosdep update --rosdistro $ROS_DISTRO
+rosdep install -i --from-path src --rosdistro $ROS_DISTRO -y
+```
+Zainstaluje to wszystkie zależności wskazane w paczkach znajdujących się w folderze **src**, w tym przypadku zależności paczki BehaviorTree.CPP.
 
 Następnie postępując zgodnie z instrukcjami na stronie [BehaviorTree tutorial](https://www.behaviortree.dev/docs/category/learn-the-basic-concepts) (Wystarczy przeczytać od początku do [02 Blackboard and ports](https://www.behaviortree.dev/docs/tutorial-basics/tutorial_02_basic_ports)) należy stworzyć proste drzewo wyświetlające tekst na standardowym wyjściu terminala. Proszę dać chociaż jeden liść czekający na wejście od użytkownika i na jego bazie przynajmniej zwracać statusy `SUCCESS` i `FAILURE`. Czekanie na wejście może się dziać w sposób blokujący (blokujące akcje w drzewach bechawioralnych nie są wskazane). Mile widziane wykorzystanie portów, ale nie jest ono konieczne.
 
