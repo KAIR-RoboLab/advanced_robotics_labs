@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<root BTCPP_format="4" project_name="Project">
+    <include path="bt_test.xml"/>
+    <!-- Description of Node Models (used by Groot) -->
+    <TreeNodesModel>
+        <Action ID="ButtonNode" editable="true">
+            <input_port name="topic_name"/>
+        </Action>
+        <Action ID="NavToGoalNode" editable="true">
+            <input_port name="goal_theta" default="0.0"/>
+            <input_port name="goal_x" default="0.0"/>
+            <input_port name="goal_y" default="0.0"/>
+            <input_port name="nav_bt"/>
+        </Action>
+    </TreeNodesModel>
+</root>

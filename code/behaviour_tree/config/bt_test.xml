@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<root BTCPP_format="4">
+  <BehaviorTree ID="MainTree">
+    <Sequence>
+      <ButtonNode topic_name="/btn_right"/>
+      <NavToGoalNode goal_theta="4.20"
+                     goal_x="0.6"
+                     goal_y="0.9"
+                     nav_bt=""/>
+    </Sequence>
+  </BehaviorTree>
+
+  <!-- Description of Node Models (used by Groot) -->
+  <TreeNodesModel>
+    <Action ID="ButtonNode"
+            editable="true">
+      <input_port name="topic_name"/>
+    </Action>
+    <Action ID="NavToGoalNode"
+            editable="true">
+      <input_port name="goal_theta"
+                  default="0.0"/>
+      <input_port name="goal_x"
+                  default="0.0"/>
+      <input_port name="goal_y"
+                  default="0.0"/>
+      <input_port name="nav_bt"/>
+    </Action>
+  </TreeNodesModel>
+
+</root>
