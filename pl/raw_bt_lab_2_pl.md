@@ -41,6 +41,7 @@ Następnie pobierz statyczną mapę sali z Upela i dodaj ją do folderu **maps**
 
 Postaw robota na ziemi i na komputerze uruchom:
 ``` bash
+xhost +local:docker
 SLAM_MODE=localization docker compose -f compose.pc.yaml up
 ```
 
